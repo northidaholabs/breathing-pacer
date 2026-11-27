@@ -454,7 +454,7 @@ function end(how) {
   setState(how === 'done' ? 'done' : 'ready');
   drawProgress(how === 'done' ? s.breaths : 0);
   status.textContent = how === 'done' ? 'Finished' : 'Stopped';
-  if (how === 'done') { tune(); logSession(); }
+  if (how === 'done') { tune(0.15 + animalSound(s.shape, 0.15)); logSession(); }
 }
 
 // ---------- Sound: starts on, and the speaker button turns it off ----------
@@ -485,7 +485,7 @@ function audioSet(level, pitch) {
 // Same volume ceiling as the tone.
 const funSound = () => soundActive() && s.soundType === 'fun';
 function blip(from, to, wait, len, type) {
-  if (!ctx) return;
+  if (!audioCtx()) return;
   const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + wait;
   o.type = type || 'sine';
   o.frequency.setValueAtTime(from, t); o.frequency.exponentialRampToValueAtTime(to, t + len);
@@ -493,7 +493,59 @@ function blip(from, to, wait, len, type) {
   o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + len + 0.05);
 }
 function pop() { if (funSound()) blip(520, 1040, 0, 0.12); }
-function tune() { if (funSound()) [523, 659, 784, 1047].forEach((f, i) => blip(f, f, 0.15 + i * 0.14, 0.24, 'triangle')); }
+function tune(wait) { if (funSound()) [523, 659, 784, 1047].forEach((f, i) => blip(f, f, wait + i * 0.14, 0.24, 'triangle')); }
+
+// Animal noises, made on the device from simple tones. Each one is short and uses the same volume ceiling.
+// A note: wave type, pitches to glide through (Hz), length (s), start (s), and optional
+// flutter (am, Hz), wobble (vib: [rate, depth]) and a soft top end (lp, Hz).
+const NOISES = {
+  frog:    { len: 0.4, notes: [{ type: 'sawtooth', f: [170, 230], len: 0.13, am: 38, lp: 1400, vol: 0.85 }, { type: 'sawtooth', f: [240, 330], len: 0.2, at: 0.17, am: 38, lp: 1600, vol: 0.85 }] },   // rib-bit
+  cat:     { len: 0.65, notes: [{ type: 'sawtooth', f: [520, 820, 780, 480], len: 0.6, lp: 1800, vol: 0.7 }] },                                                                    // meow
+  puffer:  { len: 0.4, notes: [0, 0.09, 0.2, 0.27].map((at, i) => ({ f: [350 + i * 90, 900 + i * 150], len: 0.08, at })) },                                                        // bubbles
+  penguin: { len: 0.5, notes: [{ type: 'square', f: [420, 360], len: 0.16, am: 30, lp: 1500, vol: 0.6 }, { type: 'square', f: [440, 340], len: 0.22, at: 0.22, am: 30, lp: 1500, vol: 0.6 }] },   // honk honk
+  bunny:   { len: 0.55, notes: [{ f: [260, 620, 300], len: 0.22, vib: [14, 40] }, { f: [300, 700, 340], len: 0.24, at: 0.26, vib: [14, 40] }] },                                   // boing boing
+  monster: { len: 0.75, notes: [{ type: 'sawtooth', f: [120, 90, 180], len: 0.55, am: 20, lp: 700, vol: 0.85 }, { f: [500, 900], len: 0.1, at: 0.6 }] },                                      // a goofy "blurgh-bip"
+};
+function audioCtx() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  ctx = ctx || new AC();
+  ctx.resume();
+  return ctx;
+}
+function note(o, wait) {
+  const c = audioCtx(); if (!c) return;
+  const t = c.currentTime + wait + (o.at || 0), end = t + o.len, peak = VOLUME[s.volume] * (o.vol || 1);
+  const src = c.createOscillator(), g = c.createGain(), extra = [];
+  src.type = o.type || 'sine';
+  src.frequency.setValueAtTime(o.f[0], t);
+  o.f.slice(1).forEach((f, i, rest) => src.frequency.exponentialRampToValueAtTime(f, t + o.len * (i + 1) / rest.length));
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(peak, t + Math.min(0.03, o.len / 4));
+  g.gain.setValueAtTime(peak, t + o.len * 0.6);
+  g.gain.exponentialRampToValueAtTime(0.0001, end);
+  let out = src;
+  if (o.lp) { const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = o.lp; out.connect(lp); out = lp; }
+  if (o.am) {                                      // flutter: the level dips and returns many times a second
+    const lfo = c.createOscillator(), depth = c.createGain(), trem = c.createGain();
+    lfo.frequency.value = o.am; depth.gain.value = 0.5; trem.gain.value = 0.5;
+    lfo.connect(depth).connect(trem.gain); out.connect(trem); out = trem; extra.push(lfo);
+  }
+  if (o.vib) {                                     // wobble: the pitch wavers
+    const lfo = c.createOscillator(), depth = c.createGain();
+    lfo.frequency.value = o.vib[0]; depth.gain.value = o.vib[1];
+    lfo.connect(depth).connect(src.frequency); extra.push(lfo);
+  }
+  out.connect(g).connect(c.destination);
+  for (const n of [src, ...extra]) { n.start(t); n.stop(end + 0.05); }
+}
+// Plays the animal's noise and says how long it lasts, so the end tune can wait for it.
+function animalSound(key, wait = 0) {
+  const n = NOISES[key];
+  if (!n || !funSound()) return 0;
+  n.notes.forEach(o => note(o, wait));
+  return n.len;
+}
 function audioStop() {
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   if (!osc) return;
@@ -552,6 +604,7 @@ choices.addEventListener('click', e => {
   e.stopPropagation();
   const b = e.target.closest('button'); if (!b) return;
   s.shape = b.dataset.shape; save();
+  animalSound(s.shape);
   if (state === 'done') { setState('ready'); drawProgress(0); rest(false); }
   drawShape();
 });
@@ -685,6 +738,7 @@ for (const id of CHIPS) {
     const b = e.target.closest('button'); if (!b) return;
     const v = b.dataset.v;
     change(id, id === 'breaths' ? Number(v) : (v === 'true' ? true : v === 'false' ? false : v));
+    if (id === 'shape') animalSound(v);
   });
 }
 // Shapes offered to the child: between two and four.

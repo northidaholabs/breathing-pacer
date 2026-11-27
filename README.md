@@ -55,7 +55,7 @@ Then open http://localhost:5190.
 
 - Six animals with faces (frog, cat, puffer fish, penguin, bunny, monster). They puff up a little on the in-breath.
 - Brighter shape colours, a rainbow option that changes colour each breath, and a sky palette.
-- Fun noises: a slide whistle with the breath, a bloop as each breath lands, a short tune at the end. Same volume ceiling.
+- Fun noises: a slide whistle with the breath, a bloop as each breath lands, a short tune at the end. Each animal also has its own noise (ribbit, meow, bubbles, honk, boing, a goofy growl), played when it is picked and at the end. All made on the device from simple tones, no sound files. Same volume ceiling.
 - Stars: each finished breath turns its dot into a star, and at the end the animal smiles and stars pop out. Nothing is counted or kept between sessions.
 - New visitors get all of this. The Quiet and Standard quick setups go back to the plain circle, one colour and no stars.
 
