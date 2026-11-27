@@ -826,6 +826,8 @@ applyPresetLink();
 applyLook();
 window.addEventListener('hashchange', () => { if (state !== 'running') { applyPresetLink(); applyLook(); if (!settings.hidden) showSettings(); } });
 $('buzz-set').hidden = !NATIVE;
+// The support link opens a payment page, so it stays on the website. The phone app has no internet permission.
+$('support').hidden = NATIVE;
 // Android back button: closes the grown-ups screen first, then leaves the app.
 plugin('App')?.addListener('backButton', ({ canGoBack }) => {
   if (!settings.hidden) closeSettings();
