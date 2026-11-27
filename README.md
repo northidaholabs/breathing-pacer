@@ -27,7 +27,7 @@ Then open http://localhost:5190.
 - Pace defaults to 10 breaths a minute, with age presets of 12, 10 and 9. An adult can set 7 to 14.
 - Sessions are counted in breaths (default 5), not minutes.
 - No breath holds. A short settle at the bottom of each breath.
-- Sound is off until someone taps the speaker. One soft sine tone, 165 to 220 Hz, with a hard volume ceiling.
+- Sound starts on (changed after feedback; it was off at first). The speaker button turns it off. The calm sound is one soft sine tone, 165 to 220 Hz, with a hard volume ceiling.
 - Only the shape moves. Still mode (or the device's reduced-motion setting) swaps movement for a fade with an arrow.
 - A tap never stops a session by accident. Only the stop button or Escape does.
 - No rewards, streaks, scores, accounts, analytics or third-party requests. Settings live in local storage.
@@ -37,7 +37,7 @@ Then open http://localhost:5190.
 - Five shapes (circle, balloon, rocket, whale, moon), five shape colours, four palettes including a low-contrast one.
 - Optional child choice of shape on the child screen (two to four offered, last pick remembered).
 - Voice that says "In" and "Out", using only on-device voices.
-- Preset links: settings in the URL fragment, validated on load, never turn sound on.
+- Preset links: settings in the URL fragment, validated on load, never change whether sound is on.
 - "Again" button on the finished screen, first-then picture strip, shrinking-circle timer.
 
 ## Added from the later list
@@ -55,7 +55,7 @@ Then open http://localhost:5190.
 
 - Six animals with faces (frog, cat, puffer fish, penguin, bunny, monster). They puff up a little on the in-breath.
 - Brighter shape colours, a rainbow option that changes colour each breath, and a sky palette.
-- Fun noises: a slide whistle with the breath, a bloop as each breath lands, a short tune at the end. Still off until the speaker is tapped, same volume ceiling.
+- Fun noises: a slide whistle with the breath, a bloop as each breath lands, a short tune at the end. Same volume ceiling.
 - Stars: each finished breath turns its dot into a star, and at the end the animal smiles and stars pop out. Nothing is counted or kept between sessions.
 - New visitors get all of this. The Quiet and Standard quick setups go back to the plain circle, one colour and no stars.
 

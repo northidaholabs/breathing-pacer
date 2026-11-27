@@ -83,7 +83,7 @@ const DEFAULTS = {
   driver: 'watch',     // 'watch' | 'hold' (press and hold to breathe in)
   pacer: 'rise',       // 'rise' | 'eight' | 'hand'
   soundButton: true,   // show the speaker on the child's screen
-  soundOn: false,      // sound is off until someone taps the speaker
+  soundOn: true,       // sound starts on; the speaker on the child's screen turns it off
   soundType: 'fun',    // 'tone' | 'voice' | 'fun'
   voice: '',           // name of an on-device voice, '' = device default
   volume: 'normal',    // 'quiet' | 'normal'
@@ -122,9 +122,9 @@ const VOICE_VOLUME = { quiet: 0.45, normal: 0.85 };
 const PRESETS = {
   quiet:    { soundButton: false, palette: 'soft',  motion: 'still', words: false, childChoice: false, companion: false, again: false, cheer: false, progress: 'dots' },
   standard: { soundButton: true,  palette: 'light', motion: 'auto',  words: false, childChoice: false, companion: false, again: true,  cheer: false, progress: 'dots', soundType: 'tone', volume: 'quiet' },
-  fun:      { soundButton: true,  palette: 'sky',   motion: 'auto',  words: false, childChoice: true,  companion: false, again: true,  cheer: true,  progress: 'dots', soundType: 'fun', volume: 'normal',
+  fun:      { soundButton: true,  soundOn: true, palette: 'sky',   motion: 'auto',  words: false, childChoice: true,  companion: false, again: true,  cheer: true,  progress: 'dots', soundType: 'fun', volume: 'normal',
               shape: 'frog', choices: ['frog', 'cat', 'puffer', 'penguin'], shapeColor: 'rainbow' },
-  more:     { soundButton: true,  palette: 'sky',   motion: 'move',  words: true,  childChoice: true,  companion: true,  again: true,  cheer: true,  progress: 'dots', soundType: 'fun', volume: 'normal' },
+  more:     { soundButton: true,  soundOn: true, palette: 'sky',   motion: 'move',  words: true,  childChoice: true,  companion: true,  again: true,  cheer: true,  progress: 'dots', soundType: 'fun', volume: 'normal' },
 };
 function applyPreset(name) {
   Object.assign(s, PRESETS[name]);
@@ -191,7 +191,7 @@ function applyPresetLink() {
       : (key === 'pace' || key === 'breaths') ? Number(raw) : raw;
   }
   if (!found) return;
-  Object.assign(s, sanitize(next), { soundOn: false, record: s.record });   // a link never turns sound or the record on
+  Object.assign(s, sanitize(next), { soundOn: s.soundOn, record: s.record });   // a link never changes sound on or off, or the record
   save();
   history.replaceState(null, '', location.pathname + location.search);
 }
@@ -457,7 +457,7 @@ function end(how) {
   if (how === 'done') { tune(); logSession(); }
 }
 
-// ---------- Sound: only after a speaker tap ----------
+// ---------- Sound: starts on, and the speaker button turns it off ----------
 let ctx = null, osc = null, gain = null;
 const soundActive = () => s.soundOn && s.soundButton;
 
