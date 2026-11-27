@@ -76,7 +76,7 @@ cd native && npm install && npm run sync
 cd android && JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ./gradlew bundleRelease
 ```
 
-The bundle lands in `native/android/app/build/outputs/bundle/release/`. It must be signed with the upload key before Google Play takes it. App id: `com.northidaholabs.breathe` (permanent once published). Icons come from `native/assets/` via `npx capacitor-assets generate --android`.
+The bundle lands in `native/android/app/build/outputs/bundle/release/`. It is signed with the upload key when `~/.android-keys/breathing-pacer.properties` exists (the key and its password stay outside the repo; the password is also in the macOS Keychain as "breathing-pacer Android upload key"). App id: `com.northidaholabs.breathe` (permanent once published). Icons come from `native/assets/` via `npx capacitor-assets generate --android`.
 
 ## Not done yet
 

@@ -16,8 +16,24 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // The upload key lives outside the repo (default ~/.android-keys/breathing-pacer.properties,
+    // or set PACER_SIGNING to another properties file). Without it, release builds come out unsigned.
+    def signingFile = file(System.getenv('PACER_SIGNING') ?: "${System.getProperty('user.home')}/.android-keys/breathing-pacer.properties")
+    if (signingFile.exists()) {
+        def p = new Properties()
+        signingFile.withInputStream { p.load(it) }
+        signingConfigs {
+            upload {
+                storeFile file(p.storeFile)
+                storePassword p.storePassword
+                keyAlias p.keyAlias
+                keyPassword p.keyPassword
+            }
+        }
+    }
     buildTypes {
         release {
+            if (signingFile.exists()) signingConfig signingConfigs.upload
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
