@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en" data-palette="light" data-shape-color="blue">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Breathing pacer</title>
+<meta name="description" content="A quiet breathing pacer for children. No accounts, no tracking.">
+<meta name="theme-color" content="#EEF1EC">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Child screen. Nothing here needs reading. -->
+<main id="child" data-state="ready">
+  <header class="bar">
+    <div class="slot left">
+      <button id="stop" class="tool" type="button" aria-label="Stop" hidden>
+        <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="13" y="13" width="22" height="22" rx="4"/></svg>
+      </button>
+      <button id="adults" class="tool adults" type="button" aria-label="Grown-ups: settings">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 15h28M10 24h28M10 33h28" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><circle cx="19" cy="15" r="4.5"/><circle cx="30" cy="24" r="4.5"/><circle cx="16" cy="33" r="4.5"/></svg>
+        <span>Grown-ups</span>
+      </button>
+    </div>
+    <div class="progress" aria-hidden="true">
+      <ol id="dots"></ol>
+      <div id="wedge" hidden></div>
+    </div>
+    <div class="slot right">
+      <button id="sound" class="tool" type="button" aria-label="Sound" aria-pressed="false">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M8 19h8l10-8v26l-10-8H8z"/>
+          <g class="waves" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="M32 18c3 3 3 9 0 12"/><path d="M37 13c6 6 6 16 0 22"/></g>
+          <path class="slash" d="M32 18l10 12M42 18L32 30" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="cue" aria-hidden="true">
+    <p id="word"></p>
+    <div id="strip" hidden></div>
+  </div>
+
+  <div id="stage">
+    <div class="side" id="choices" hidden></div>
+    <div id="track">
+      <svg id="guide" aria-hidden="true"></svg>
+      <div id="shape">
+        <svg id="sil" viewBox="0 0 100 100" aria-hidden="true"></svg>
+        <svg class="icon icon-play" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 12l20 12-20 12z"/></svg>
+        <svg class="icon icon-done" viewBox="0 0 48 48" aria-hidden="true"><path d="M11 25l9 9 17-19" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="icon icon-in" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 10l14 20H10z"/></svg>
+        <svg class="icon icon-out" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 38L10 18h28z"/></svg>
+      </div>
+    </div>
+    <div class="side">
+      <svg id="pal" viewBox="0 0 100 100" aria-hidden="true" hidden><circle cx="29" cy="40" r="11"/><circle cx="71" cy="40" r="11"/><path d="M10 94c0-36 16-60 40-60s40 24 40 60z"/><g class="eyes"><circle cx="40" cy="66" r="3.5"/><circle cx="60" cy="66" r="3.5"/></g></svg>
+      <button id="again" class="tool" type="button" aria-label="Again" hidden>
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M37 26a13 13 0 1 1-5-11" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M34 6v10H24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <p id="status" class="sr-only" role="status"></p>
+</main>
+
+<!-- Grown-ups screen. -->
+<section id="settings" hidden aria-labelledby="settings-title">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h1 id="settings-title">Grown-ups</h1>
+      <button id="done" class="primary" type="button">Done</button>
+    </div>
+    <p class="lede">Set this up once. The child's screen then looks and behaves the same every time.</p>
+
+    <fieldset>
+      <legend>Quick setups</legend>
+      <div class="chips" id="presets">
+        <button type="button" data-preset="quiet">Quiet</button>
+        <button type="button" data-preset="standard">Standard</button>
+        <button type="button" data-preset="more">More to see and hear</button>
+      </div>
+      <p class="hint">Each one sets sound, colours, movement, words and extras in one go. Pace, length and shape stay as they are, and every choice can still be changed below.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Pace</legend>
+      <div class="chips" id="age">
+        <button type="button" data-pace="12">Age 4 to 5</button>
+        <button type="button" data-pace="10">Age 6 to 8</button>
+        <button type="button" data-pace="9">Age 9 to 12</button>
+      </div>
+      <label class="row" for="pace">
+        <span>Slower</span>
+        <input id="pace" type="range" min="7" max="14" step="0.5" aria-label="Breaths a minute">
+        <span>Faster</span>
+      </label>
+      <p class="readout" id="pace-out"></p>
+      <div class="chips" id="set-stepDown">
+        <button type="button" data-v="false">Same pace all the way</button>
+        <button type="button" data-v="true">Start a little faster, then slow down</button>
+      </div>
+      <p class="hint">These starting points are about half a child's resting rate. If the child strains or gulps air, make it faster.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>How many breaths</legend>
+      <div class="chips" id="set-breaths">
+        <button type="button" data-v="3">3</button>
+        <button type="button" data-v="5">5</button>
+        <button type="button" data-v="8">8</button>
+        <button type="button" data-v="10">10</button>
+        <button type="button" data-v="15">15</button>
+        <button type="button" data-v="20">20</button>
+        <button type="button" data-v="30">30</button>
+      </div>
+      <p class="readout" id="breaths-out"></p>
+      <p class="sub">Shown to the child as</p>
+      <div class="chips" id="set-progress">
+        <button type="button" data-v="dots">One dot for each breath</button>
+        <button type="button" data-v="wedge">A circle that shrinks</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Rhythm</legend>
+      <div class="chips" id="set-rhythm">
+        <button type="button" data-v="even">In and out the same</button>
+        <button type="button" data-v="longout">Out a little longer</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>How the child follows</legend>
+      <div class="chips" id="set-driver">
+        <button type="button" data-v="watch">Watch the shape and breathe with it</button>
+        <button type="button" data-v="hold">Press and hold to breathe in, let go to breathe out</button>
+      </div>
+      <p class="hint">With press and hold, the child sets the speed. The shape still moves slowly, and a breath counts each time it comes back down.</p>
+      <div id="pacer-wrap">
+        <p class="sub">What the shape does</p>
+        <div class="chips" id="set-pacer">
+          <button type="button" data-v="rise">Goes up and down</button>
+          <button type="button" data-v="eight">Travels a figure of eight</button>
+          <button type="button" data-v="hand">Traces a hand</button>
+        </div>
+        <p class="hint">On the figure of eight, one loop is the in-breath and the other is the out-breath. On the hand, up a finger is in and down is out. After five breaths it comes back the other way.</p>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Shape</legend>
+      
+        <div class="chips" id="set-shape">
+          <button type="button" data-v="circle">Circle</button>
+          <button type="button" data-v="balloon">Balloon</button>
+          <button type="button" data-v="rocket">Rocket</button>
+          <button type="button" data-v="whale">Whale</button>
+          <button type="button" data-v="moon">Moon</button>
+          <button type="button" data-v="own" hidden>My picture</button>
+        </div>
+      <div class="row">
+        <label class="plain file">Use our own picture<input id="picture-file" type="file" accept="image/*" class="sr-only"></label>
+        <button id="remove-picture" class="plain" type="button" hidden>Remove the picture</button>
+      </div>
+      <p class="hint" id="picture-note"></p>
+      <p class="hint">A photo or drawing of something the child loves. It is cropped to a circle and kept only on this device. It is never uploaded and is not part of a shared link.</p>
+      <p class="sub">Who picks</p>
+      <div class="chips" id="set-childChoice">
+        <button type="button" data-v="false">A grown-up picks here</button>
+        <button type="button" data-v="true">The child picks on their screen</button>
+      </div>
+      <div id="choices-wrap" hidden>
+        <p class="sub">Shapes offered to the child (two to four)</p>
+        <div class="chips" id="choices-set">
+          <button type="button" data-v="circle">Circle</button>
+          <button type="button" data-v="balloon">Balloon</button>
+          <button type="button" data-v="rocket">Rocket</button>
+          <button type="button" data-v="whale">Whale</button>
+          <button type="button" data-v="moon">Moon</button>
+          <button type="button" data-v="own" hidden>My picture</button>
+        </div>
+        <p class="hint">The last shape the child picked stays picked next time.</p>
+      </div>
+      <p class="sub">Company</p>
+      <div class="chips" id="set-companion">
+        <button type="button" data-v="false">Just the shape</button>
+        <button type="button" data-v="true">A small friend breathes along</button>
+      </div>
+      <p class="hint">The friend sits beside the shape and swells gently with each breath. It makes no sound, asks for nothing and is the same every time.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Colours</legend>
+      <div class="chips" id="set-palette">
+        <button type="button" data-v="light">Light</button>
+        <button type="button" data-v="dark">Dark</button>
+        <button type="button" data-v="warm">Warm</button>
+        <button type="button" data-v="soft">Soft (low contrast)</button>
+      </div>
+      <p class="sub">Shape colour</p>
+      <div class="chips" id="set-shapeColor">
+        <button type="button" data-v="blue"><i style="--c:#3F6E8C"></i>Blue</button>
+        <button type="button" data-v="green"><i style="--c:#3F7358"></i>Green</button>
+        <button type="button" data-v="plum"><i style="--c:#75507F"></i>Plum</button>
+        <button type="button" data-v="clay"><i style="--c:#A9503A"></i>Clay</button>
+        <button type="button" data-v="slate"><i style="--c:#55606B"></i>Grey</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Movement</legend>
+      <div class="chips" id="set-motion">
+        <button type="button" data-v="auto">Follow this device</button>
+        <button type="button" data-v="move">Shape moves up and down</button>
+        <button type="button" data-v="still">Shape stays still and fades</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Sound</legend>
+      <p class="hint">Sound is off until someone taps the speaker on the child's screen.</p>
+      <div class="chips" id="set-soundButton">
+        <button type="button" data-v="true">Show the speaker button</button>
+        <button type="button" data-v="false">No sound at all</button>
+      </div>
+      <div id="sound-more">
+        <div class="chips" id="set-soundType">
+          <button type="button" data-v="tone">A soft tone that rises and falls</button>
+          <button type="button" data-v="voice">A voice says "In" and "Out"</button>
+        </div>
+        <div class="row" id="voice-row" hidden>
+          <select id="voice" aria-label="Voice"></select>
+          <button id="try-voice" class="plain" type="button">Try it</button>
+        </div>
+        <div class="chips" id="set-volume">
+          <button type="button" data-v="quiet">Quiet</button>
+          <button type="button" data-v="normal">A bit louder</button>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Words</legend>
+      <div class="chips" id="set-words">
+        <button type="button" data-v="false">No words</button>
+        <button type="button" data-v="true">Show "Breathe in" and "Breathe out"</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>When it finishes</legend>
+      <div class="chips" id="set-again">
+        <button type="button" data-v="true">Show an "again" button</button>
+        <button type="button" data-v="false">No "again" button</button>
+      </div>
+      <p class="sub">First breathing, then (shown as two pictures before starting)</p>
+      <div class="chips" id="set-then">
+        <button type="button" data-v="none">Nothing shown</button>
+        <button type="button" data-v="book">Book</button>
+        <button type="button" data-v="snack">Snack</button>
+        <button type="button" data-v="play">Play</button>
+        <button type="button" data-v="outside">Outside</button>
+        <button type="button" data-v="music">Music</button>
+        <button type="button" data-v="rest">Rest</button>
+      </div>
+      <p class="hint">Use this to show what comes next in the day, not as a prize for breathing.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Record</legend>
+      <div class="chips" id="set-record">
+        <button type="button" data-v="false">Keep no record</button>
+        <button type="button" data-v="true">Count finished sessions on this device</button>
+      </div>
+      <div id="record-more" hidden>
+        <p class="sub">Sessions that reached the end, last seven days</p>
+        <ul class="record" id="record-out"></ul>
+        <button id="clear-record" class="plain" type="button">Clear the record</button>
+      </div>
+      <p class="hint">For grown-ups only. The child never sees it, and there are no streaks or targets. A day with none is just a day.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Share this setup</legend>
+      <p class="hint">Opening this link on another device gives it the same settings. The link holds settings only, no names, and never turns sound on.</p>
+      <div class="row">
+        <input id="link" type="text" readonly aria-label="Link to this setup">
+        <button id="copy" class="plain" type="button">Copy link</button>
+      </div>
+    </fieldset>
+
+    <div class="notes">
+      <h2>Good to know</h2>
+      <ul>
+        <li>This is a calming activity, not a medical device or a treatment.</li>
+        <li>Small, gentle breaths are enough. Stop if the child feels dizzy, tingly or uncomfortable.</li>
+        <li>Ask a clinician first if the child has asthma or a heart condition.</li>
+        <li>It works best practised when calm, with you breathing alongside. The stop button is always there and stopping early is fine.</li>
+      </ul>
+      <h2>To read and print</h2>
+      <ul>
+        <li><a href="guide.html">One-page guide for parents and teachers</a></li>
+        <li><a href="card.html">Picture card for a visual schedule</a></li>
+        <li><a href="privacy.html">What this site does with data (for schools)</a></li>
+      </ul>
+      <h2>Privacy</h2>
+      <p>No accounts, no tracking, no ads, nothing sent anywhere. These settings are saved only in this browser on this device.</p>
+    </div>
+  </div>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
