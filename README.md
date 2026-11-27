@@ -59,6 +59,25 @@ Then open http://localhost:5190.
 - Stars: each finished breath turns its dot into a star, and at the end the animal smiles and stars pop out. Nothing is counted or kept between sessions.
 - New visitors get all of this. The Quiet and Standard quick setups go back to the plain circle, one colour and no stars.
 
+## Phone app (Android first)
+
+`native/` wraps these same web files as an Android app with Capacitor. There is one codebase: a change to the web files reaches the app on its next build. In the app only:
+
+- A soft vibration as each breath starts (a setting under Grown-ups, shown only in the app).
+- The screen stays on during a session.
+- The back button closes Grown-ups before it leaves the app.
+- Shared setup links point at breathe.northidaholabs.com.
+- No internet permission and no cloud backup, so nothing leaves the phone.
+
+Build (needs Java 21 and the Android SDK; on this Mac: `brew install openjdk@21`, SDK in `~/Library/Android/sdk`):
+
+```bash
+cd native && npm install && npm run sync
+cd android && JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ./gradlew bundleRelease
+```
+
+The bundle lands in `native/android/app/build/outputs/bundle/release/`. It must be signed with the upload key before Google Play takes it. App id: `com.northidaholabs.breathe` (permanent once published). Icons come from `native/assets/` via `npx capacitor-assets generate --android`.
+
 ## Not done yet
 
 - Not tested on a real iPad or an old Chromebook.

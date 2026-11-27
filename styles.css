@@ -52,7 +52,9 @@ button, select, input { font: inherit; color: inherit; }
 /* ---------- Child screen ---------- */
 #child {
   height: 100dvh; display: flex; flex-direction: column;
-  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+  /* The phone app passes the screen edges in --safe-area-inset-*; browsers use env(). */
+  padding: max(12px, var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) max(16px, var(--safe-area-inset-right, env(safe-area-inset-right, 0px)))
+    var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) max(16px, var(--safe-area-inset-left, env(safe-area-inset-left, 0px)));
   user-select: none; -webkit-user-select: none; touch-action: manipulation;
   cursor: pointer;
 }
@@ -205,9 +207,9 @@ input:focus-visible, select:focus-visible, a:focus-visible {
 [data-motion="still"][data-state="running"][data-phase="out"] .icon-out { display: block; }
 
 /* ---------- Grown-ups screen ---------- */
-#settings { min-height: 100dvh; padding: 20px 16px 48px; }
+#settings { min-height: 100dvh; padding: calc(20px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 16px calc(48px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))); }
 .sheet { max-width: 680px; margin: 0 auto; }
-.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; position: sticky; top: 0; background: var(--bg); padding: 8px 0; z-index: 1; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; position: sticky; top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px)); background: var(--bg); padding: 8px 0; z-index: 1; }
 h1 { font-size: 28px; margin: 0; }
 h2 { font-size: 18px; margin: 20px 0 6px; }
 .lede { margin: 4px 0 20px; }

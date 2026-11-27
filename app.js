@@ -1,5 +1,10 @@
 'use strict';
 
+// The same files run as the website and inside the phone app. In the app, Capacitor adds native extras.
+const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const plugin = name => (NATIVE && window.Capacitor.Plugins && window.Capacitor.Plugins[name]) || null;
+const SITE = 'https://breathe.northidaholabs.com/';
+
 // ---------- Storage (everything stays in this browser) ----------
 const KEY = 'breathing-pacer-settings-v1';
 const PIC_KEY = 'breathing-pacer-picture-v1';
@@ -97,6 +102,7 @@ const DEFAULTS = {
   companion: false,    // a small friend breathes along
   again: true,         // show an "again" button on the finished screen
   cheer: true,         // stars for finished breaths, and a happy ending
+  buzz: true,          // phone app only: a soft tap as each breath starts
   then: 'none',        // first-then strip
   progress: 'dots',    // 'dots' | 'wedge'
   record: false,       // keep a count of finished sessions on this device
@@ -109,7 +115,7 @@ const ENUMS = {
   motion: ['auto', 'move', 'still'], shape: Object.keys(SHAPES), then: Object.keys(THEN),
   progress: ['dots', 'wedge'],
 };
-const BOOLS = ['stepDown', 'soundButton', 'soundOn', 'words', 'childChoice', 'companion', 'again', 'cheer', 'record'];
+const BOOLS = ['stepDown', 'soundButton', 'soundOn', 'words', 'childChoice', 'companion', 'again', 'cheer', 'buzz', 'record'];
 const BREATHS = [3, 5, 8, 10, 15, 20, 30];
 const VOLUME = { quiet: 0.035, normal: 0.08 };   // hard ceiling on tone loudness
 const RAINBOW = ['green', 'teal', 'blue', 'purple', 'pink', 'red', 'orange'];
@@ -167,7 +173,7 @@ const s = load();
 // The picture and the session record never go in a link.
 const LINK = { p: 'pace', sd: 'stepDown', b: 'breaths', r: 'rhythm', dr: 'driver', pc: 'pacer', sb: 'soundButton', st: 'soundType',
   v: 'volume', w: 'words', c: 'palette', sc: 'shapeColor', m: 'motion', sh: 'shape', cc: 'childChoice', ch: 'choices',
-  co: 'companion', a: 'again', ce: 'cheer', t: 'then', pr: 'progress' };
+  co: 'companion', a: 'again', ce: 'cheer', bz: 'buzz', t: 'then', pr: 'progress' };
 
 function presetLink() {
   const q = new URLSearchParams();
@@ -177,7 +183,7 @@ function presetLink() {
     if (key === 'choices') v = v.filter(k => k !== 'own');
     q.set(short, Array.isArray(v) ? v.join('.') : typeof v === 'boolean' ? (v ? '1' : '0') : String(v));
   }
-  return `${location.origin}${location.pathname}#${q}`;
+  return `${NATIVE ? SITE : location.origin + location.pathname}#${q}`;   // app links point at the website
 }
 function applyPresetLink() {
   const q = new URLSearchParams(location.hash.slice(1));
@@ -322,6 +328,20 @@ function restPoint(finished) {
   return finished ? handPoint(s.breaths - 1, 'out', 1) : HAND[0][0];
 }
 
+// ---------- Phone extras: vibration and keeping the screen on ----------
+// A soft tap as each breath starts: firmer for in, lighter for out. Only in the phone app.
+function tap(style) {
+  if (!s.buzz) return;
+  plugin('Haptics')?.impact({ style }).catch(() => {});
+}
+// The screen stays on during a session and may sleep again afterwards.
+function awake(on) {
+  const k = plugin('KeepAwake');
+  if (k) { (on ? k.keepAwake() : k.allowSleep()).catch(() => {}); return; }
+  if (on && navigator.wakeLock) navigator.wakeLock.request('screen').then(l => { wakeLock = l; }).catch(() => {});
+  if (!on && wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+}
+
 // ---------- Session ----------
 let state = 'ready';     // 'ready' | 'running' | 'done'
 let t0 = 0, raf = 0, plan = null, cur = 0, lastBreath = -1, lastPhase = '', wakeLock = null;
@@ -384,6 +404,7 @@ function showPhase(phase) {
   lastPhase = phase;
   if (!phase) { delete child.dataset.phase; word.textContent = ''; return; }
   child.dataset.phase = phase;
+  tap(phase === 'in' ? 'MEDIUM' : 'LIGHT');
   if (s.words) word.textContent = phase === 'in' ? 'Breathe in' : 'Breathe out';
   if (soundActive() && s.soundType === 'voice') say(phase === 'in' ? 'In' : 'Out');
 }
@@ -396,7 +417,7 @@ function start() {
   t0 = lastT = performance.now();
   tint(0);
   audioStart();
-  if (navigator.wakeLock) navigator.wakeLock.request('screen').then(l => { wakeLock = l; }).catch(() => {});
+  awake(true);
   status.textContent = 'Started';
   drawProgress(0);
   raf = requestAnimationFrame(holding() ? holdFrame : frame);
@@ -449,12 +470,12 @@ function end(how) {
   cancelAnimationFrame(raf);
   audioStop();
   held = false;
-  if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+  awake(false);
   rest(how === 'done');
   setState(how === 'done' ? 'done' : 'ready');
   drawProgress(how === 'done' ? s.breaths : 0);
   status.textContent = how === 'done' ? 'Finished' : 'Stopped';
-  if (how === 'done') { tune(0.15 + animalSound(s.shape, 0.15)); logSession(); }
+  if (how === 'done') { if (s.buzz && s.cheer) plugin('Haptics')?.notification({ type: 'SUCCESS' }).catch(() => {}); tune(0.15 + animalSound(s.shape, 0.15)); logSession(); }
 }
 
 // ---------- Sound: starts on, and the speaker button turns it off ----------
@@ -682,7 +703,7 @@ reducedMotion.addEventListener('change', applyLook);
 
 // ---------- Grown-ups screen ----------
 const CHIPS = ['stepDown', 'breaths', 'rhythm', 'driver', 'pacer', 'soundButton', 'soundType', 'volume', 'words', 'palette',
-  'shapeColor', 'motion', 'shape', 'childChoice', 'companion', 'again', 'cheer', 'then', 'progress', 'record'];
+  'shapeColor', 'motion', 'shape', 'childChoice', 'companion', 'again', 'cheer', 'buzz', 'then', 'progress', 'record'];
 
 function seconds(n) {
   const r = Math.round(n);
@@ -804,6 +825,14 @@ stars.innerHTML = STAR_COLORS.map((c, i) => {
 applyPresetLink();
 applyLook();
 window.addEventListener('hashchange', () => { if (state !== 'running') { applyPresetLink(); applyLook(); if (!settings.hidden) showSettings(); } });
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+$('buzz-set').hidden = !NATIVE;
+// Android back button: closes the grown-ups screen first, then leaves the app.
+plugin('App')?.addListener('backButton', ({ canGoBack }) => {
+  if (!settings.hidden) closeSettings();
+  else if (canGoBack) history.back();
+  else plugin('App').exitApp();
+});
+// The app already has its files on the phone, so only the website needs the offline helper.
+if (!NATIVE && 'serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }

@@ -1,0 +1,8 @@
+{
+  "appId": "com.northidaholabs.breathe",
+  "appName": "Breathing pacer",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#D9F0FF"
+  }
+}
