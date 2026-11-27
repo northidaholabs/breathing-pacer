@@ -1,6 +1,6 @@
 // Keeps the pacer working with no network after the first visit.
 // Network first, so an update shows up when online; cache when offline.
-const CACHE = 'breathing-pacer-v5';
+const CACHE = 'breathing-pacer-v6';
 const FILES = ['./', 'index.html', 'styles.css', 'app.js', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png',
   'manifest.webmanifest', 'pages.css', 'guide.html', 'card.html', 'privacy.html'];
 

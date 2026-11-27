@@ -55,5 +55,4 @@ Then open http://localhost:5190.
 
 - Not tested on a real iPad or an old Chromebook.
 - The voice option and offline use have not been checked on real devices.
-- The data statement (`privacy.html`) has blank operator, contact and date lines to fill in.
 - Privacy and health wording should get a lawyer's look before a public launch.
