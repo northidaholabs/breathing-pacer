@@ -14,13 +14,46 @@ const store = {
 let pictureData = store.get(PIC_KEY);
 if (pictureData && !/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(pictureData)) pictureData = null;
 
-// ---------- Shapes (quiet silhouettes, all on the same motion) ----------
+// ---------- Shapes: quiet silhouettes and silly animals, all on the same motion ----------
+// Animal faces: open eyes while breathing, happy closed eyes when the session is finished.
+const INK = '#1D2530', PINK = '#FF8FA3', BEAK = '#F2A21E';
+const LINE = `fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"`;
+function eyes(x1, x2, y, r) {
+  const arc = x => `<path d="M${x - r * 0.6} ${y + r * 0.25}q${r * 0.6} ${-r} ${r * 1.2} 0"/>`;
+  return `<g fill="#fff"><circle cx="${x1}" cy="${y}" r="${r}"/><circle cx="${x2}" cy="${y}" r="${r}"/></g>`
+    + `<g class="look" fill="${INK}"><circle cx="${x1}" cy="${y + 1}" r="${r * 0.5}"/><circle cx="${x2}" cy="${y + 1}" r="${r * 0.5}"/></g>`
+    + `<g class="joy" ${LINE}>${arc(x1)}${arc(x2)}</g>`;
+}
+const cheeks = (x1, x2, y, r) => `<g fill="${PINK}" opacity=".7"><circle cx="${x1}" cy="${y}" r="${r}"/><circle cx="${x2}" cy="${y}" r="${r}"/></g>`;
+const SPIKES = Array.from({ length: 11 }, (_, i) => {
+  const a = (30 + i * 30) * Math.PI / 180, pt = (r, d) => `${(48 + r * Math.cos(a + d)).toFixed(1)} ${(52 + r * Math.sin(a + d)).toFixed(1)}`;
+  return `M${pt(33, -0.17)}L${pt(47, 0)}L${pt(33, 0.17)}z`;
+}).join('');
+
 const SHAPES = {
   circle:  { name: 'Circle',  svg: '<circle cx="50" cy="50" r="50"/>' },
   balloon: { name: 'Balloon', svg: '<ellipse cx="50" cy="45" rx="39" ry="45"/><path d="M44 89h12l4 10H40z"/>' },
   rocket:  { name: 'Rocket',  svg: '<path d="M50 1C71 16 77 46 72 74H28C23 46 29 16 50 1z"/><path d="M29 54L10 82l20-6zM71 54l19 28-20-6z"/><path d="M38 76h24l-4 12H42z"/>' },
   whale:   { name: 'Whale',   svg: '<path d="M6 54C6 32 28 22 52 24c20 2 32 13 35 27 3-7 5-14 11-18 1 11 0 20-6 28-9 12-27 18-45 18C22 79 6 71 6 54z"/>' },
   moon:    { name: 'Moon',    svg: '<circle cx="50" cy="50" r="50"/><g fill="#000" opacity=".13"><circle cx="24" cy="34" r="9"/><circle cx="77" cy="68" r="10"/><circle cx="72" cy="23" r="5"/></g>' },
+  frog:    { name: 'Frog', face: true, svg: '<ellipse cx="50" cy="62" rx="47" ry="35"/><circle cx="27" cy="27" r="18"/><circle cx="73" cy="27" r="18"/>'
+    + eyes(27, 73, 27, 12) + cheeks(15, 85, 62, 6) + `<path d="M26 64q24 20 48 0" ${LINE}/>` },
+  cat:     { name: 'Cat', face: true, svg: '<path d="M10 44L13 6l30 16zM90 44L87 6 57 22z"/><ellipse cx="50" cy="58" rx="44" ry="39"/>'
+    + eyes(33, 67, 50, 10) + `<path d="M45 64h10l-5 6z" fill="${PINK}"/><path d="M40 73q5 6 10 0q5 6 10 0" ${LINE}/>`
+    + `<path d="M3 60l17 4M3 73l17-2M97 60l-17 4M97 73l-17-2" ${LINE} stroke-width="2.5" opacity=".45"/>` },
+  puffer:  { name: 'Puffer fish', face: true, svg: `<path d="${SPIKES}"/><path d="M80 52l18-15v30z"/><circle cx="48" cy="52" r="36"/>`
+    + '<ellipse cx="48" cy="70" rx="23" ry="14" fill="#fff" opacity=".28"/>' + eyes(35, 61, 43, 10) + cheeks(24, 72, 60, 5)
+    + `<ellipse cx="48" cy="66" rx="5" ry="6" fill="${INK}"/>` },
+  penguin: { name: 'Penguin', face: true, svg: '<path d="M16 42C3 55 3 72 9 82l11-16zM84 42c13 13 13 30 7 40L80 66z"/><ellipse cx="50" cy="50" rx="36" ry="46"/>'
+    + '<ellipse cx="50" cy="66" rx="24" ry="28" fill="#fff"/>' + eyes(38, 62, 27, 8)
+    + `<path d="M43 38h14l-7 10z" fill="${BEAK}"/><g fill="${BEAK}"><ellipse cx="36" cy="95" rx="11" ry="4.5"/><ellipse cx="64" cy="95" rx="11" ry="4.5"/></g>` },
+  bunny:   { name: 'Bunny', face: true, svg: '<ellipse cx="34" cy="25" rx="10" ry="24"/><ellipse cx="66" cy="25" rx="10" ry="24"/><ellipse cx="50" cy="66" rx="38" ry="33"/>'
+    + `<g fill="${PINK}" opacity=".7"><ellipse cx="34" cy="26" rx="4.5" ry="15"/><ellipse cx="66" cy="26" rx="4.5" ry="15"/></g>`
+    + eyes(36, 64, 58, 8) + cheeks(22, 78, 72, 5) + `<ellipse cx="50" cy="70" rx="4" ry="3" fill="${PINK}"/>`
+    + `<path d="M43 77q3.5 5 7 0q3.5 5 7 0" ${LINE}/><rect x="46" y="81" width="8" height="8" rx="1.5" fill="#fff"/>` },
+  monster: { name: 'Monster', face: true, svg: '<path d="M22 24L13 2l19 11zM78 24l9-22-19 11z"/><path d="M10 97V50C10 23 28 12 50 12s40 11 40 38v47l-13-9-13 9-14-9-14 9-13-9z"/>'
+    + `<circle cx="50" cy="42" r="17" fill="#fff"/><circle class="look" cx="50" cy="44" r="8" fill="${INK}"/><path class="joy" d="M40 46q10 -16 20 0" ${LINE}/>`
+    + `<path d="M29 68q21 17 42 0z" fill="${INK}"/><path d="M37 68l4 6 4-6zM55 68l4 6 4-6z" fill="#fff"/>` },
   own:     { name: 'My picture', get svg() {
     return pictureData
       ? `<defs><clipPath id="pic-clip"><circle cx="50" cy="50" r="50"/></clipPath></defs><image href="${pictureData}" width="100" height="100" preserveAspectRatio="xMidYMid slice" clip-path="url(#pic-clip)"/>`
@@ -51,40 +84,55 @@ const DEFAULTS = {
   pacer: 'rise',       // 'rise' | 'eight' | 'hand'
   soundButton: true,   // show the speaker on the child's screen
   soundOn: false,      // sound is off until someone taps the speaker
-  soundType: 'tone',   // 'tone' | 'voice'
+  soundType: 'fun',    // 'tone' | 'voice' | 'fun'
   voice: '',           // name of an on-device voice, '' = device default
-  volume: 'quiet',     // 'quiet' | 'normal'
+  volume: 'normal',    // 'quiet' | 'normal'
   words: false,
-  palette: 'light',    // 'light' | 'dark' | 'warm' | 'soft'
-  shapeColor: 'blue',
+  palette: 'sky',      // 'light' | 'dark' | 'warm' | 'soft' | 'sky'
+  shapeColor: 'rainbow',   // one colour, or 'rainbow': a new colour each breath
   motion: 'auto',      // 'auto' | 'move' | 'still'
-  shape: 'circle',
-  childChoice: false,  // child can pick the shape on their screen
-  choices: ['circle', 'balloon', 'rocket', 'whale'],
+  shape: 'frog',
+  childChoice: true,   // child can pick the shape on their screen
+  choices: ['frog', 'cat', 'puffer', 'penguin'],
   companion: false,    // a small friend breathes along
   again: true,         // show an "again" button on the finished screen
+  cheer: true,         // stars for finished breaths, and a happy ending
   then: 'none',        // first-then strip
   progress: 'dots',    // 'dots' | 'wedge'
   record: false,       // keep a count of finished sessions on this device
 };
 const ENUMS = {
   rhythm: ['even', 'longout'], driver: ['watch', 'hold'], pacer: ['rise', 'eight', 'hand'],
-  soundType: ['tone', 'voice'], volume: ['quiet', 'normal'],
-  palette: ['light', 'dark', 'warm', 'soft'], shapeColor: ['blue', 'green', 'plum', 'clay', 'slate'],
+  soundType: ['tone', 'voice', 'fun'], volume: ['quiet', 'normal'],
+  palette: ['light', 'dark', 'warm', 'soft', 'sky'],
+  shapeColor: ['rainbow', 'red', 'orange', 'pink', 'teal', 'purple', 'blue', 'green', 'plum', 'clay', 'slate'],
   motion: ['auto', 'move', 'still'], shape: Object.keys(SHAPES), then: Object.keys(THEN),
   progress: ['dots', 'wedge'],
 };
-const BOOLS = ['stepDown', 'soundButton', 'soundOn', 'words', 'childChoice', 'companion', 'again', 'record'];
+const BOOLS = ['stepDown', 'soundButton', 'soundOn', 'words', 'childChoice', 'companion', 'again', 'cheer', 'record'];
 const BREATHS = [3, 5, 8, 10, 15, 20, 30];
 const VOLUME = { quiet: 0.035, normal: 0.08 };   // hard ceiling on tone loudness
+const RAINBOW = ['green', 'teal', 'blue', 'purple', 'pink', 'red', 'orange'];
+const STAR = 'M50 4l14 30 32 4-24 22 7 32-29-16-29 16 7-32L4 38l32-4z';
+const STAR_COLORS = ['#EFAA00', '#E8503A', '#2FA36B', '#3B8FD9', '#EFAA00', '#C04FB0', '#F07F1E'];
 const VOICE_VOLUME = { quiet: 0.45, normal: 0.85 };
 
-// Quick setups change how much the child sees and hears. They leave pace, length, shape and colour alone.
+// Quick setups change how much the child sees and hears. They leave pace and length alone.
+// Quiet and Standard also swap an animal for a plain circle and a rainbow for one calm colour.
 const PRESETS = {
-  quiet:    { soundButton: false, palette: 'soft',  motion: 'still', words: false, childChoice: false, companion: false, again: false, progress: 'dots' },
-  standard: { soundButton: true,  palette: 'light', motion: 'auto',  words: false, childChoice: false, companion: false, again: true,  progress: 'dots', soundType: 'tone', volume: 'quiet' },
-  more:     { soundButton: true,  palette: 'light', motion: 'move',  words: true,  childChoice: true,  companion: true,  again: true,  progress: 'dots', soundType: 'tone', volume: 'normal' },
+  quiet:    { soundButton: false, palette: 'soft',  motion: 'still', words: false, childChoice: false, companion: false, again: false, cheer: false, progress: 'dots' },
+  standard: { soundButton: true,  palette: 'light', motion: 'auto',  words: false, childChoice: false, companion: false, again: true,  cheer: false, progress: 'dots', soundType: 'tone', volume: 'quiet' },
+  fun:      { soundButton: true,  palette: 'sky',   motion: 'auto',  words: false, childChoice: true,  companion: false, again: true,  cheer: true,  progress: 'dots', soundType: 'fun', volume: 'normal',
+              shape: 'frog', choices: ['frog', 'cat', 'puffer', 'penguin'], shapeColor: 'rainbow' },
+  more:     { soundButton: true,  palette: 'sky',   motion: 'move',  words: true,  childChoice: true,  companion: true,  again: true,  cheer: true,  progress: 'dots', soundType: 'fun', volume: 'normal' },
 };
+function applyPreset(name) {
+  Object.assign(s, PRESETS[name]);
+  if (name === 'quiet' || name === 'standard') {
+    if (SHAPES[s.shape].face) s.shape = 'circle';
+    if (s.shapeColor === 'rainbow') s.shapeColor = 'blue';
+  }
+}
 
 // Anything read from storage or a link goes through here, so bad values fall back to defaults.
 function sanitize(o) {
@@ -103,18 +151,23 @@ function sanitize(o) {
   if (typeof o.voice === 'string') out.voice = o.voice.slice(0, 100);
   return out;
 }
+// Setups saved before the fun look existed move to Fun once. After that, whatever a grown-up picks stays.
+const LOOK = 2;
 function load() {
-  try { return sanitize(JSON.parse(store.get(KEY) || '{}')); }
-  catch { return { ...DEFAULTS }; }
+  try {
+    const o = JSON.parse(store.get(KEY) || '{}'), out = sanitize(o);
+    if (store.get(KEY) && o.look !== LOOK) Object.assign(out, PRESETS.fun);
+    return out;
+  } catch { return { ...DEFAULTS }; }
 }
-function save() { store.set(KEY, JSON.stringify(s)); }   // still works without storage
+function save() { store.set(KEY, JSON.stringify({ ...s, look: LOOK })); }   // still works without storage
 const s = load();
 
 // ---------- Preset links: settings only, in the part of the address after # ----------
 // The picture and the session record never go in a link.
 const LINK = { p: 'pace', sd: 'stepDown', b: 'breaths', r: 'rhythm', dr: 'driver', pc: 'pacer', sb: 'soundButton', st: 'soundType',
   v: 'volume', w: 'words', c: 'palette', sc: 'shapeColor', m: 'motion', sh: 'shape', cc: 'childChoice', ch: 'choices',
-  co: 'companion', a: 'again', t: 'then', pr: 'progress' };
+  co: 'companion', a: 'again', ce: 'cheer', t: 'then', pr: 'progress' };
 
 function presetLink() {
   const q = new URLSearchParams();
@@ -148,7 +201,7 @@ const $ = id => document.getElementById(id);
 const child = $('child'), settings = $('settings');
 const shape = $('shape'), sil = $('sil'), track = $('track'), guide = $('guide'), pal = $('pal');
 const word = $('word'), strip = $('strip'), status = $('status');
-const dots = $('dots'), wedge = $('wedge'), choices = $('choices');
+const dots = $('dots'), wedge = $('wedge'), choices = $('choices'), stars = $('stars');
 const stopBtn = $('stop'), adultsBtn = $('adults'), soundBtn = $('sound'), againBtn = $('again');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -292,14 +345,21 @@ function drawProgress(current, fraction) {
     dots.classList.toggle('many', s.breaths > 12);
   }
   [...dots.children].forEach((li, i) => {
+    if (s.shapeColor === 'rainbow') li.dataset.shapeColor = RAINBOW[i % RAINBOW.length]; else delete li.dataset.shapeColor;
     li.classList.toggle('done', i < current);
     li.classList.toggle('now', i === current && state === 'running');
   });
   wedge.style.setProperty('--left', String(1 - (fraction ?? current / s.breaths)));
 }
 
+// Rainbow: the shape takes a new colour each breath.
+function tint(i) {
+  document.documentElement.dataset.shapeColor = s.shapeColor === 'rainbow' ? RAINBOW[i % RAINBOW.length] : s.shapeColor;
+}
+
 // p is how "breathed in" the shape is (0 to 1). pos is where it sits on a path pacer.
 function place(p, pos) {
+  sil.style.scale = (!isStill() && SHAPES[s.shape].face) ? String(0.86 + 0.14 * p) : '';   // animals puff up as they breathe in
   if (isStill()) {
     shape.style.transform = '';
     shape.style.opacity = 0.3 + 0.7 * p;
@@ -334,6 +394,7 @@ function start() {
   plan = schedule(); cur = 0; lastBreath = -1; lastPhase = '';
   hx = 0; peaked = false; count = 0; held = false;
   t0 = lastT = performance.now();
+  tint(0);
   audioStart();
   if (navigator.wakeLock) navigator.wakeLock.request('screen').then(l => { wakeLock = l; }).catch(() => {});
   status.textContent = 'Started';
@@ -358,7 +419,7 @@ function frame(now) {
   place(p, child.dataset.pacer === 'rise' ? null : pathPoint(cur, phase, x));
   audioSet(Math.sin(Math.PI * x), p);
   showPhase(phase);
-  if (cur !== lastBreath) { lastBreath = cur; drawProgress(cur); }
+  if (cur !== lastBreath) { if (lastBreath >= 0) pop(); lastBreath = cur; tint(cur); drawProgress(cur); }
   // The shrinking circle moves smoothly, or once per breath in still mode.
   if (s.progress === 'wedge' && !isStill()) wedge.style.setProperty('--left', String(1 - t / plan.total));
   raf = requestAnimationFrame(frame);
@@ -378,7 +439,7 @@ function holdFrame(now) {
   if (hx === 0 && peaked) {
     peaked = false; count++;
     if (count >= s.breaths) return end('done');
-    drawProgress(count);
+    pop(); tint(count); drawProgress(count);
   }
   raf = requestAnimationFrame(holdFrame);
 }
@@ -393,7 +454,7 @@ function end(how) {
   setState(how === 'done' ? 'done' : 'ready');
   drawProgress(how === 'done' ? s.breaths : 0);
   status.textContent = how === 'done' ? 'Finished' : 'Stopped';
-  if (how === 'done') logSession();
+  if (how === 'done') { tune(); logSession(); }
 }
 
 // ---------- Sound: only after a speaker tap ----------
@@ -402,13 +463,13 @@ const soundActive = () => s.soundOn && s.soundButton;
 
 // Tone: one soft low sine that rises on the in-breath and falls on the out-breath.
 function audioStart() {
-  if (!soundActive() || s.soundType !== 'tone') return;
+  if (!soundActive() || s.soundType === 'voice') return;
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return;
   ctx = ctx || new AC();
   ctx.resume();
   osc = ctx.createOscillator(); gain = ctx.createGain();
-  osc.type = 'sine'; osc.frequency.value = 165; gain.gain.value = 0;
+  osc.type = funSound() ? 'triangle' : 'sine'; osc.frequency.value = funSound() ? 330 : 165; gain.gain.value = 0;
   osc.connect(gain).connect(ctx.destination);
   osc.start();
 }
@@ -416,9 +477,23 @@ function audioStart() {
 function audioSet(level, pitch) {
   if (!osc) return;
   const now = ctx.currentTime;
-  gain.gain.setTargetAtTime(VOLUME[s.volume] * level, now, 0.06);
-  osc.frequency.setTargetAtTime(165 + 55 * pitch, now, 0.06);
+  const fun = osc.type === 'triangle';
+  gain.gain.setTargetAtTime(VOLUME[s.volume] * level * (fun ? 0.7 : 1), now, 0.06);
+  osc.frequency.setTargetAtTime(fun ? 330 + 330 * pitch : 165 + 55 * pitch, now, 0.06);
 }
+// Fun noises: a slide whistle with the breath, a bloop as each breath lands, a short tune at the end.
+// Same volume ceiling as the tone.
+const funSound = () => soundActive() && s.soundType === 'fun';
+function blip(from, to, wait, len, type) {
+  if (!ctx) return;
+  const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + wait;
+  o.type = type || 'sine';
+  o.frequency.setValueAtTime(from, t); o.frequency.exponentialRampToValueAtTime(to, t + len);
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(VOLUME[s.volume], t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+  o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + len + 0.05);
+}
+function pop() { if (funSound()) blip(520, 1040, 0, 0.12); }
+function tune() { if (funSound()) [523, 659, 784, 1047].forEach((f, i) => blip(f, f, 0.15 + i * 0.14, 0.24, 'triangle')); }
 function audioStop() {
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   if (!osc) return;
@@ -516,6 +591,7 @@ window.addEventListener('resize', () => { if (state !== 'running') rest(state ==
 function drawShape() {
   sil.innerHTML = SHAPES[s.shape].svg;
   child.toggleAttribute('data-own', s.shape === 'own' && !!pictureData);
+  child.toggleAttribute('data-face', !!SHAPES[s.shape].face);
   choices.replaceChildren(...s.choices.map(key => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'tool pick'; b.dataset.shape = key;
@@ -530,7 +606,8 @@ function drawShape() {
 function applyLook() {
   const root = document.documentElement;
   root.dataset.palette = s.palette;
-  root.dataset.shapeColor = s.shapeColor;
+  tint(0);
+  child.toggleAttribute('data-cheer', s.cheer);
   const still = s.motion === 'still' || (s.motion === 'auto' && reducedMotion.matches);
   child.dataset.motion = still ? 'still' : 'move';
   // Path pacers need movement and a shape that leads, so still mode and press-and-hold use up and down.
@@ -552,7 +629,7 @@ reducedMotion.addEventListener('change', applyLook);
 
 // ---------- Grown-ups screen ----------
 const CHIPS = ['stepDown', 'breaths', 'rhythm', 'driver', 'pacer', 'soundButton', 'soundType', 'volume', 'words', 'palette',
-  'shapeColor', 'motion', 'shape', 'childChoice', 'companion', 'again', 'then', 'progress', 'record'];
+  'shapeColor', 'motion', 'shape', 'childChoice', 'companion', 'again', 'cheer', 'then', 'progress', 'record'];
 
 function seconds(n) {
   const r = Math.round(n);
@@ -599,7 +676,7 @@ function change(key, value) { s[key] = value; save(); applyLook(); showSettings(
 
 $('presets').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  Object.assign(s, PRESETS[b.dataset.preset]); save(); applyLook(); showSettings();
+  applyPreset(b.dataset.preset); save(); applyLook(); showSettings();
 });
 $('age').addEventListener('click', e => { const b = e.target.closest('button'); if (b) change('pace', Number(b.dataset.pace)); });
 $('pace').addEventListener('input', e => change('pace', Number(e.target.value)));
@@ -662,6 +739,12 @@ $('done').addEventListener('click', closeSettings);
 
 // The "then" buttons show the same pictures the child will see.
 for (const b of $('set-then').children) if (b.dataset.v !== 'none') b.insertAdjacentHTML('afterbegin', picture(b.dataset.v));
+
+// Stars that pop out around the shape when a session is finished.
+stars.innerHTML = STAR_COLORS.map((c, i) => {
+  const a = (-90 + (i - 3) * 26) * Math.PI / 180;   // an arc over the top, clear of the buttons beside the shape
+  return `<svg viewBox="0 0 100 100" style="--x:${Math.round(Math.cos(a) * 230)}%;--y:${Math.round(Math.sin(a) * 330)}%;--d:${i * 50}ms;fill:${c}"><path d="${STAR}"/></svg>`;
+}).join('');
 
 // ---------- Start up ----------
 applyPresetLink();

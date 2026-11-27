@@ -1,6 +1,6 @@
 # Breathing pacer
 
-A quiet breathing pacer for children, built with autistic children in mind. One shape rises on the in-breath and falls on the out-breath. Dots along the top show how many breaths are left.
+A breathing pacer for children, built with autistic children in mind. One shape rises on the in-breath and falls on the out-breath. Dots along the top show how many breaths are left.
 
 This is version one, built from the must-have list in the research report (`~/reports/Breathing app design for autistic kids.md`). It has not been tested with children yet.
 
@@ -50,6 +50,14 @@ Then open http://localhost:5190.
 - Quick setups: Quiet, Standard, More to see and hear.
 - Optional per-day count of finished sessions, shown only on the grown-ups screen.
 - Deliberately not built: anything using a microphone, sensors, accounts or sync. The research report treats those as legal decisions to make first.
+
+## Added after first feedback: more fun by default
+
+- Six animals with faces (frog, cat, puffer fish, penguin, bunny, monster). They puff up a little on the in-breath.
+- Brighter shape colours, a rainbow option that changes colour each breath, and a sky palette.
+- Fun noises: a slide whistle with the breath, a bloop as each breath lands, a short tune at the end. Still off until the speaker is tapped, same volume ceiling.
+- Stars: each finished breath turns its dot into a star, and at the end the animal smiles and stars pop out. Nothing is counted or kept between sessions.
+- New visitors get all of this. The Quiet and Standard quick setups go back to the plain circle, one colour and no stars.
 
 ## Not done yet
 

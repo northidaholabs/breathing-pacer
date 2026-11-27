@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en" data-palette="light" data-shape-color="blue">
+<html lang="en" data-palette="sky" data-shape-color="green">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Breathing pacer</title>
-<meta name="description" content="A quiet breathing pacer for children. No accounts, no tracking.">
-<meta name="theme-color" content="#EEF1EC">
+<meta name="description" content="A breathing pacer for children. No accounts, no tracking.">
+<meta name="theme-color" content="#D9F0FF">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -50,6 +50,7 @@
     <div id="track">
       <svg id="guide" aria-hidden="true"></svg>
       <div id="shape">
+        <div id="stars" aria-hidden="true"></div>
         <svg id="sil" viewBox="0 0 100 100" aria-hidden="true"></svg>
         <svg class="icon icon-play" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 12l20 12-20 12z"/></svg>
         <svg class="icon icon-done" viewBox="0 0 48 48" aria-hidden="true"><path d="M11 25l9 9 17-19" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -82,9 +83,10 @@
       <div class="chips" id="presets">
         <button type="button" data-preset="quiet">Quiet</button>
         <button type="button" data-preset="standard">Standard</button>
+        <button type="button" data-preset="fun">Fun</button>
         <button type="button" data-preset="more">More to see and hear</button>
       </div>
-      <p class="hint">Each one sets sound, colours, movement, words and extras in one go. Pace, length and shape stay as they are, and every choice can still be changed below.</p>
+      <p class="hint">Each one sets sound, colours, movement, words and extras in one go. Fun also picks animals and a rainbow. Quiet and Standard go back to a plain circle in one colour. Pace and length stay as they are, and every choice can still be changed below.</p>
     </fieldset>
 
     <fieldset>
@@ -161,6 +163,12 @@
           <button type="button" data-v="rocket">Rocket</button>
           <button type="button" data-v="whale">Whale</button>
           <button type="button" data-v="moon">Moon</button>
+          <button type="button" data-v="frog">Frog</button>
+          <button type="button" data-v="cat">Cat</button>
+          <button type="button" data-v="puffer">Puffer fish</button>
+          <button type="button" data-v="penguin">Penguin</button>
+          <button type="button" data-v="bunny">Bunny</button>
+          <button type="button" data-v="monster">Monster</button>
           <button type="button" data-v="own" hidden>My picture</button>
         </div>
       <div class="row">
@@ -182,6 +190,12 @@
           <button type="button" data-v="rocket">Rocket</button>
           <button type="button" data-v="whale">Whale</button>
           <button type="button" data-v="moon">Moon</button>
+          <button type="button" data-v="frog">Frog</button>
+          <button type="button" data-v="cat">Cat</button>
+          <button type="button" data-v="puffer">Puffer fish</button>
+          <button type="button" data-v="penguin">Penguin</button>
+          <button type="button" data-v="bunny">Bunny</button>
+          <button type="button" data-v="monster">Monster</button>
           <button type="button" data-v="own" hidden>My picture</button>
         </div>
         <p class="hint">The last shape the child picked stays picked next time.</p>
@@ -201,15 +215,23 @@
         <button type="button" data-v="dark">Dark</button>
         <button type="button" data-v="warm">Warm</button>
         <button type="button" data-v="soft">Soft (low contrast)</button>
+        <button type="button" data-v="sky">Sky</button>
       </div>
       <p class="sub">Shape colour</p>
       <div class="chips" id="set-shapeColor">
+        <button type="button" data-v="rainbow"><i style="--c:conic-gradient(#CF3F2E,#C95F0A,#3F7358,#0C8A84,#3F6E8C,#7650C8,#CF3D86,#CF3F2E)"></i>Rainbow</button>
+        <button type="button" data-v="red"><i style="--c:#CF3F2E"></i>Red</button>
+        <button type="button" data-v="orange"><i style="--c:#C95F0A"></i>Orange</button>
+        <button type="button" data-v="pink"><i style="--c:#CF3D86"></i>Pink</button>
+        <button type="button" data-v="teal"><i style="--c:#0C8A84"></i>Teal</button>
+        <button type="button" data-v="purple"><i style="--c:#7650C8"></i>Purple</button>
         <button type="button" data-v="blue"><i style="--c:#3F6E8C"></i>Blue</button>
         <button type="button" data-v="green"><i style="--c:#3F7358"></i>Green</button>
         <button type="button" data-v="plum"><i style="--c:#75507F"></i>Plum</button>
         <button type="button" data-v="clay"><i style="--c:#A9503A"></i>Clay</button>
         <button type="button" data-v="slate"><i style="--c:#55606B"></i>Grey</button>
       </div>
+      <p class="hint">Rainbow gives the shape a new colour each breath.</p>
     </fieldset>
 
     <fieldset>
@@ -232,6 +254,7 @@
         <div class="chips" id="set-soundType">
           <button type="button" data-v="tone">A soft tone that rises and falls</button>
           <button type="button" data-v="voice">A voice says "In" and "Out"</button>
+          <button type="button" data-v="fun">Fun noises: a slide whistle, a bloop each breath, a tune at the end</button>
         </div>
         <div class="row" id="voice-row" hidden>
           <select id="voice" aria-label="Voice"></select>
@@ -254,6 +277,11 @@
 
     <fieldset>
       <legend>When it finishes</legend>
+      <div class="chips" id="set-cheer">
+        <button type="button" data-v="true">Stars and a happy face</button>
+        <button type="button" data-v="false">Ends quietly</button>
+      </div>
+      <p class="hint">With stars, each finished breath turns its dot into a star, and the animal smiles at the end. Nothing is counted or kept.</p>
       <div class="chips" id="set-again">
         <button type="button" data-v="true">Show an "again" button</button>
         <button type="button" data-v="false">No "again" button</button>

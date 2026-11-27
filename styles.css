@@ -4,6 +4,12 @@
 [data-shape-color="plum"]  { --deep: #75507F; --pale: #CDB3D6; }
 [data-shape-color="clay"]  { --deep: #A9503A; --pale: #E3B3A2; }
 [data-shape-color="slate"] { --deep: #55606B; --pale: #BFC8D0; }
+[data-shape-color="red"]    { --deep: #CF3F2E; --pale: #F2A79C; }
+[data-shape-color="orange"] { --deep: #C95F0A; --pale: #F3BE8A; }
+[data-shape-color="pink"]   { --deep: #CF3D86; --pale: #F0A8CB; }
+[data-shape-color="teal"]   { --deep: #0C8A84; --pale: #8FD6D0; }
+[data-shape-color="purple"] { --deep: #7650C8; --pale: #C4B0F0; }
+[data-shape-color="blue"]   { --deep: #3F6E8C; --pale: #9FC3D9; }
 
 /* Palettes. Shape against background is at least 3:1, except "soft", which an adult chooses on purpose. */
 :root, [data-palette="light"] {
@@ -22,6 +28,14 @@
   --bg: #E6E9E5; --shape: color-mix(in srgb, var(--deep) 45%, #E6E9E5); --on-shape: #F1F3F0;
   --ink: #4A555A; --soft: #D3D9D4; --panel: #EEF0ED;
 }
+[data-palette="sky"] {
+  --bg: #D9F0FF; --shape: var(--deep); --on-shape: #FFFFFF;
+  --ink: #17324A; --soft: #A8D2EC; --panel: #FFFFFF;
+}
+/* Rainbow dots: each dot carries its own colour. */
+#dots li[data-shape-color] { --shape: var(--deep); }
+[data-palette="dark"] #dots li[data-shape-color] { --shape: var(--pale); }
+[data-palette="soft"] #dots li[data-shape-color] { --shape: color-mix(in srgb, var(--deep) 45%, #E6E9E5); }
 
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
@@ -86,6 +100,11 @@ input:focus-visible, select:focus-visible, a:focus-visible {
 #dots li.now { box-shadow: 0 0 0 4px var(--bg), 0 0 0 7px var(--shape); }
 /* The last breath is always marked, so the end is never a surprise. */
 #dots li:last-child { border-radius: 6px; }
+/* With stars on, each finished breath turns into a star. */
+[data-cheer] #dots li.done {
+  background: #EFAA00; border: 0; border-radius: 0; scale: 1.35;
+  clip-path: polygon(50% 0, 63% 34%, 100% 38%, 72% 62%, 80% 100%, 50% 80%, 20% 100%, 28% 62%, 0 38%, 37% 34%);
+}
 /* Or: a circle that shrinks, like a kitchen visual timer. */
 #wedge {
   width: 72px; height: 72px; border-radius: 50%;
@@ -124,7 +143,35 @@ input:focus-visible, select:focus-visible, a:focus-visible {
   display: grid; place-items: center;
   will-change: transform, opacity;
 }
-#sil { grid-area: 1 / 1; width: 100%; height: 100%; fill: var(--shape); }
+#sil { grid-area: 1 / 1; width: 100%; height: 100%; fill: var(--shape); transition: fill 0.6s; overflow: visible; }
+
+/* Animal faces: open eyes, or happy closed eyes at the end. */
+.joy { display: none; }
+[data-cheer][data-state="done"] #sil .joy { display: inline; }
+[data-cheer][data-state="done"] #sil .look { display: none; }
+/* On an animal the play and tick marks sit in a corner badge, so the face stays clear. */
+[data-face] .icon {
+  place-self: end; width: 34%; height: 34%; padding: 8%; translate: 12% 12%;
+  border-radius: 50%; background: var(--panel); color: var(--ink); border: 2px solid var(--soft);
+}
+[data-cheer][data-face][data-state="done"] .icon-done { display: none; }
+
+/* The happy ending: stars pop out and the shape does one small hop. */
+#stars { position: absolute; inset: 0; display: none; pointer-events: none; }
+[data-cheer][data-state="done"] #stars { display: block; }
+#stars svg {
+  position: absolute; left: 39%; top: 39%; width: 22%; height: 22%;
+  transform: translate(var(--x), var(--y));
+  animation: burst 0.8s cubic-bezier(0.2, 0.8, 0.3, 1) var(--d) both;
+}
+@keyframes burst { from { transform: translate(0, 0) scale(0.2) rotate(-90deg); opacity: 0; } }
+[data-cheer][data-state="done"] #sil { animation: hop 0.9s ease-in-out; }
+@keyframes hop {
+  25% { transform: translateY(-14%) rotate(-7deg); }
+  50% { transform: translateY(0) rotate(5deg); }
+  75% { transform: translateY(-7%) rotate(-3deg); }
+}
+[data-motion="still"] #stars svg, [data-motion="still"] #sil { animation: none !important; }
 #child[data-state="ready"]:active #shape { filter: brightness(0.92); }
 .icon { grid-area: 1 / 1; width: 34%; height: 34%; fill: currentColor; display: none; }
 [data-state="ready"] .icon-play { display: block; }
