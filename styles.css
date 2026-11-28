@@ -256,8 +256,31 @@ legend + * { clear: both; }
 .support .hint { margin-bottom: 0; max-width: 40em; }
 a { color: inherit; }
 
+/* Grown-ups gate. The ring is the hold itself, so it fills evenly and does not flash. */
+#gate {
+  min-height: 100dvh; display: flex; align-items: center; justify-content: center;
+  padding: calc(20px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 20px
+    calc(24px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
+}
+#gate:focus { outline: none; }
+.gate-sheet { display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 28em; }
+.gate-sheet .lede { margin: 8px 0 8px; }
+.gate-hold {
+  position: relative; width: 168px; height: 168px; margin-top: 12px;
+  border: 0; border-radius: 50%; background: var(--panel);
+  display: grid; place-items: center; font-weight: 700; font-size: 22px; cursor: pointer;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.gate-hold svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.gate-track, .gate-arc { fill: none; stroke-width: 8; }
+.gate-track { stroke: var(--soft); }
+.gate-arc { stroke: var(--shape); stroke-linecap: round; stroke-dasharray: 326.73; stroke-dashoffset: 326.73; opacity: 0; }
+.gate-hold:focus-visible { outline: 3px solid var(--shape); outline-offset: 6px; }
+#gate-back { margin-top: 28px; min-width: 160px; min-height: 56px; }
+
 /* Short screens (a phone on its side): smaller choice buttons so four still fit. */
 @media (max-height: 560px) {
+  .gate-hold { width: 128px; height: 128px; }
   .side { gap: 6px; }
   .pick { width: 56px; height: 56px; border-radius: 14px; }
   .pick svg { width: 34px; height: 34px; }

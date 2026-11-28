@@ -69,6 +69,24 @@
   <p id="status" class="sr-only" role="status"></p>
 </main>
 
+<!-- Grown-ups gate. A short press and hold, with a ring that fills while the finger stays down. -->
+<section id="gate" hidden role="dialog" aria-modal="true" aria-labelledby="gate-title" aria-describedby="gate-help" tabindex="-1">
+  <div class="sheet gate-sheet">
+    <h1 id="gate-title">Grown-ups</h1>
+    <p id="gate-help" class="lede">This part is for a grown-up. Press and hold the circle for about 3 seconds, until the ring is full. Then let go.</p>
+    <button id="gate-hold" class="gate-hold" type="button">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <circle class="gate-track" cx="60" cy="60" r="52"/>
+        <circle id="gate-arc" class="gate-arc" cx="60" cy="60" r="52"/>
+      </svg>
+      <span>Hold</span>
+    </button>
+    <div id="gate-meter" class="sr-only" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Not holding" aria-label="Hold progress"></div>
+    <p id="gate-live" class="sr-only" aria-live="polite"></p>
+    <button id="gate-back" class="plain" type="button">Back</button>
+  </div>
+</section>
+
 <!-- Grown-ups screen. -->
 <section id="settings" hidden aria-labelledby="settings-title">
   <div class="sheet">
