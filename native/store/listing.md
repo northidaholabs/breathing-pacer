@@ -16,7 +16,7 @@ Breathing Pacer for Kids
 Breathe along with a silly frog. Calm, simple, and collects nothing.
 ```
 
-**Full description** (1,542 of 4,000)
+**Full description** (1,489 of 4,000)
 
 ```
 A breathing pacer for kids, built with autistic children in mind.
@@ -45,8 +45,6 @@ No accounts, no ads, no tracking, no in-app purchases. The app has no internet p
 GOOD TO KNOW
 This is a calming activity, not a medical device or a treatment. Small, gentle breaths are enough. Stop if your child feels dizzy, and ask a clinician first if they have asthma or a heart condition.
 
-Also free on the web at breathe.northidaholabs.com.
-
 Made by North Idaho Labs in Moscow, Idaho.
 ```
 
@@ -71,7 +69,7 @@ Screenshots: 1 start screen with the animal picker, 2 breathing in, 3 finished w
 - **App or game:** App. **Free.** (Google Play never lets a free app become paid later.)
 - **Category:** Health & Fitness. Parenting or Education would also fit.
 - **Contact email:** required and shown publicly. Use a project address, not a personal one.
-- **Website:** https://breathe.northidaholabs.com
+- **Website:** https://northidaholabs.com/
 - **Privacy policy:** https://breathe.northidaholabs.com/privacy.html
 
 ## Policy forms

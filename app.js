@@ -204,7 +204,7 @@ function applyPresetLink() {
 
 // ---------- Elements ----------
 const $ = id => document.getElementById(id);
-const child = $('child'), settings = $('settings');
+const child = $('child'), settings = $('settings'), gate = $('gate');
 const shape = $('shape'), sil = $('sil'), track = $('track'), guide = $('guide'), pal = $('pal');
 const word = $('word'), strip = $('strip'), status = $('status');
 const dots = $('dots'), wedge = $('wedge'), choices = $('choices'), stars = $('stars');
@@ -619,7 +619,7 @@ soundBtn.addEventListener('click', e => {
   if (state === 'running') { s.soundOn ? audioStart() : audioStop(); }
 });
 stopBtn.addEventListener('click', e => { e.stopPropagation(); end('stop'); });
-adultsBtn.addEventListener('click', e => { e.stopPropagation(); openSettings(); });
+adultsBtn.addEventListener('click', e => { e.stopPropagation(); openGate(); });
 againBtn.addEventListener('click', e => { e.stopPropagation(); rest(false); start(); });
 choices.addEventListener('click', e => {
   e.stopPropagation();
@@ -647,6 +647,15 @@ window.addEventListener('pointercancel', () => { held = false; });
 child.addEventListener('contextmenu', e => { if (holding()) e.preventDefault(); });
 
 document.addEventListener('keydown', e => {
+  if (!gate.hidden) {
+    if (e.key === 'Escape') { e.preventDefault(); closeGate(); return; }
+    const onBack = e.target && e.target.id === 'gate-back';
+    if (!onBack && (e.key === ' ' || e.key === 'Enter')) {
+      e.preventDefault();
+      if (!e.repeat) startGateHold();
+    }
+    return;
+  }
   if (!settings.hidden) { if (e.key === 'Escape') closeSettings(); return; }
   if (e.key === 'Escape' && state === 'running') return end('stop');
   if (e.target.closest('button')) return;
@@ -656,9 +665,17 @@ document.addEventListener('keydown', e => {
     else if (!e.repeat) child.click();
   }
 });
-document.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') held = false; });
+document.addEventListener('keyup', e => {
+  if (e.key === ' ' || e.key === 'Enter') {
+    held = false;
+    if (gateHeld || gateDone) { e.preventDefault(); endGateHold(); }
+  }
+});
 // If the page is hidden mid-session, stop quietly so it never jumps ahead.
-document.addEventListener('visibilitychange', () => { if (document.hidden && state === 'running') end('stop'); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && state === 'running') end('stop');
+  if (document.hidden) cancelGateHold();
+});
 window.addEventListener('resize', () => { if (state !== 'running') rest(state === 'done'); });
 
 // ---------- Look ----------
@@ -808,7 +825,113 @@ $('copy').addEventListener('click', () => {
 });
 if ('speechSynthesis' in window) speechSynthesis.addEventListener('voiceschanged', fillVoices);
 
-function openSettings() { child.hidden = true; settings.hidden = false; fillVoices(); showSettings(); window.scrollTo(0, 0); $('done').focus(); }
+// ---------- Grown-ups gate ----------
+// Press and hold for about 3 seconds. The ring fills while the finger or key stays down.
+// Letting go early empties the ring. Nothing flashes, and there is no fail message.
+const HOLD_MS = 3000;
+const GATE_C = 2 * Math.PI * 52;
+const gateArc = $('gate-arc');
+const gateMeter = $('gate-meter');
+const gateHold = $('gate-hold');
+gateArc.style.strokeDasharray = String(GATE_C);
+gateArc.style.strokeDashoffset = String(GATE_C);
+
+let gateRaf = 0;
+let gateFrom = 0;
+let gateHeld = false;
+let gateDone = false;
+let gateIgnoreClicks = 0;
+let gateNote = 0;
+
+function sayGate(text) {
+  const live = $('gate-live');
+  const note = ++gateNote;
+  live.textContent = '';
+  if (!text) return;
+  requestAnimationFrame(() => { if (note === gateNote) live.textContent = text; });
+}
+function setGateProgress(p) {
+  const clamped = Math.min(1, Math.max(0, p));
+  gateArc.style.strokeDashoffset = String(GATE_C * (1 - clamped));
+  gateArc.style.opacity = clamped <= 0 ? '0' : '1';
+  gateMeter.setAttribute('aria-valuenow', String(Math.round(clamped * 100)));
+}
+function cancelGateHold() {
+  gateHeld = false;
+  gateDone = false;
+  if (gateRaf) cancelAnimationFrame(gateRaf);
+  gateRaf = 0;
+  setGateProgress(0);
+  gateMeter.setAttribute('aria-valuetext', 'Not holding');
+  sayGate('');
+}
+function startGateHold() {
+  if (gate.hidden || gateHeld || gateDone) return;
+  gateHeld = true;
+  gateFrom = performance.now();
+  gateMeter.setAttribute('aria-valuetext', 'Holding');
+  sayGate('Holding.');
+  gateRaf = requestAnimationFrame(gateFrame);
+}
+function gateFrame(now) {
+  if (!gateHeld) return;
+  const p = (now - gateFrom) / HOLD_MS;
+  if (p >= 1) {
+    gateRaf = 0;
+    gateDone = true;
+    setGateProgress(1);
+    gateMeter.setAttribute('aria-valuetext', 'Ring full. Let go.');
+    sayGate('Ring full. Let go.');
+    return;
+  }
+  setGateProgress(p);
+  gateRaf = requestAnimationFrame(gateFrame);
+}
+function endGateHold() {
+  if (!gateHeld && !gateDone) return;
+  const open = gateDone && !gate.hidden;
+  cancelGateHold();
+  if (!open) return;
+  // The lift that finishes the hold can also emit a click. Swallow that click only.
+  gateIgnoreClicks = performance.now() + 400;
+  gate.hidden = true;
+  openSettings();
+}
+function openGate() {
+  cancelGateHold();
+  setGateProgress(0);
+  child.hidden = true;
+  gate.hidden = false;
+  window.scrollTo(0, 0);
+  gate.focus();
+}
+function closeGate() {
+  cancelGateHold();
+  setGateProgress(0);
+  gate.hidden = true;
+  child.hidden = false;
+  adultsBtn.focus();
+}
+
+gateHold.addEventListener('pointerdown', e => {
+  if (e.button !== 0) return;
+  gateHold.focus();
+  try { gateHold.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
+  startGateHold();
+});
+gateHold.addEventListener('pointerup', endGateHold);
+gateHold.addEventListener('pointercancel', cancelGateHold);
+window.addEventListener('pointerup', () => { if (gateHeld || gateDone) endGateHold(); });
+window.addEventListener('pointercancel', () => { if (gateHeld || gateDone) cancelGateHold(); });
+gateHold.addEventListener('contextmenu', e => e.preventDefault());
+$('gate-back').addEventListener('click', closeGate);
+document.addEventListener('click', e => {
+  if (performance.now() > gateIgnoreClicks) return;
+  e.preventDefault();
+  e.stopPropagation();
+}, true);
+
+function openSettings() { cancelGateHold(); gate.hidden = true; child.hidden = true; settings.hidden = false; fillVoices(); showSettings(); window.scrollTo(0, 0); $('done').focus(); }
 function closeSettings() { if ('speechSynthesis' in window) speechSynthesis.cancel(); settings.hidden = true; child.hidden = false; applyLook(); }
 $('done').addEventListener('click', closeSettings);
 
@@ -826,11 +949,14 @@ applyPresetLink();
 applyLook();
 window.addEventListener('hashchange', () => { if (state !== 'running') { applyPresetLink(); applyLook(); if (!settings.hidden) showSettings(); } });
 $('buzz-set').hidden = !NATIVE;
-// The support link opens a payment page, so it stays on the website. The phone app has no internet permission.
-$('support').hidden = NATIVE;
-// Android back button: closes the grown-ups screen first, then leaves the app.
+// The support link opens a payment page, so it stays on the website.
+// The phone build removes #support. Skip it when the block is not in the page.
+const support = $('support');
+if (support) support.hidden = NATIVE;
+// Android back button: closes Grown-ups, then the gate, then leaves the app.
 plugin('App')?.addListener('backButton', ({ canGoBack }) => {
   if (!settings.hidden) closeSettings();
+  else if (!gate.hidden) closeGate();
   else if (canGoBack) history.back();
   else plugin('App').exitApp();
 });
